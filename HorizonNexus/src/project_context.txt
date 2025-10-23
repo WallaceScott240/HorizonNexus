@@ -1,0 +1,1281 @@
+Project file structure:
+=======================
+./
+    App.css
+    App.tsx
+    index.css
+    main.tsx
+    assets/
+        images/
+        styles/
+            _variables.scss
+            main.scss
+    components/
+        common/
+            ProtectedRoute.tsx
+            Button/
+                Button.tsx
+                index.ts
+        layout/
+            Navbar/
+                Navbar.tsx
+                index.ts
+            Notifications/
+                Notifications.tsx
+                index.ts
+            Search/
+                SearchBar.tsx
+                index.ts
+    config/
+        firebase.ts
+    features/
+        admin/
+            components/
+                CreateUserForm.tsx
+                UserManagement.tsx
+            hooks/
+                useAdminData.ts
+            services/
+                adminService.ts
+        announcements/
+            components/
+            hooks/
+            services/
+                announcementService.ts
+        assignments/
+            components/
+            hooks/
+            services/
+                assignmentService.ts
+        authentication/
+            components/
+            hooks/
+            services/
+                authService.ts
+        chat/
+            components/
+            hooks/
+            services/
+        discussions/
+            components/
+            hooks/
+            services/
+        events/
+            components/
+            hooks/
+            services/
+        grades/
+            components/
+                GradebookView.tsx
+            hooks/
+                useGrades.ts
+            services/
+                gradeService.ts
+        profiles/
+            components/
+                ProfileCard.tsx
+            hooks/
+                useUserProfile.ts
+            services/
+                profileService.ts
+        resources/
+            components/
+            hooks/
+            services/
+    hooks/
+        useAuth.ts
+    pages/
+        AdminDashboard.tsx
+        AnnouncementsPage.tsx
+        AssignmentDetailPage.tsx
+        AssignmentsPage.tsx
+        ChatPage.tsx
+        Dashboard.tsx
+        GradesPage.tsx
+        LoginPage.tsx
+        ProfilePage.tsx
+        SearchResultsPage.tsx
+    services/
+        firestoreService.ts
+        searchService.ts
+    types/
+        index.ts
+    utils/
+        dateUtils.ts
+
+
+File Contents:
+===============
+
+
+--- FILE: App.css ---
+
+#root {
+  /*
+    The layout-constraining styles (max-width, margin, padding) have been removed from here.
+    This allows Bootstrap's container and grid classes to control the layout on a
+    per-page basis without interference from global styles.
+  */
+  /* Prevent empty ruleset lint error */
+  --root-placeholder: 0;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+--- FILE: App.tsx ---
+
+
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import Navbar from './components/layout/Navbar/Navbar';
+
+// Import Page Components
+import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import AssignmentsPage from './pages/AssignmentsPage';
+import AdminDashboard from './pages/AdminDashboard'; // Import the Admin Dashboard
+
+// Layout component to wrap protected pages with the Navbar
+const AppLayout = () => (
+  <>
+    <Navbar />
+    <main className="container mt-4">
+      <Outlet /> {/* Child routes will render here */}
+    </main>
+  </>
+);
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Public route that everyone can see */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected Routes - only accessible after login */}
+        <Route
+          path="/"
+          element={
+            // This route just checks for login, so no 'allowedRoles' prop is needed.
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Child routes that render inside AppLayout's <Outlet> */}
+          <Route index element={<Dashboard />} />
+          <Route path="announcements" element={<AnnouncementsPage />} />
+          <Route path="assignments" element={<AssignmentsPage />} />
+
+          {/* Admin-only Routes */}
+          <Route
+            path="admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Add other protected routes here as children */}
+        </Route>
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+--- FILE: index.css ---
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+
+--- FILE: main.tsx ---
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+// Import Bootstrap CSS and JS
+// This line is the most important part of the fix
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+
+--- FILE: assets/styles/_variables.scss ---
+
+
+
+--- FILE: assets/styles/main.scss ---
+
+
+
+--- FILE: components/common/ProtectedRoute.tsx ---
+
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import type { JSX } from 'react';
+import type { UserRole } from '../../types';
+
+// Define the props for the component, now including allowedRoles
+interface ProtectedRouteProps {
+  children: JSX.Element;
+  allowedRoles?: UserRole[]; // Optional: If not provided, just checks for authentication
+}
+
+export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { userProfile, isLoading } = useAuth();
+
+  // Show a loading indicator while checking auth status
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If there's no user, redirect to the login page
+  if (!userProfile) {
+    return <Navigate to="/login" />;
+  }
+
+  // If allowedRoles is provided, check if the user's role is in the array
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(userProfile.role)) {
+    // User does not have the required role, redirect them.
+    // Redirecting to the homepage is a safe default.
+    return <Navigate to="/" />;
+  }
+
+  // If the user is authenticated and has the required role (or no role was required), render the component
+  return children;
+}
+
+--- FILE: components/common/Button/Button.tsx ---
+
+
+
+--- FILE: components/common/Button/index.ts ---
+
+
+
+--- FILE: components/layout/Navbar/Navbar.tsx ---
+
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuth';
+import { logOut } from '../../../features/authentication/services/authService';
+
+export default function Navbar() {
+  const { userProfile } = useAuth(); // Updated to use userProfile
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logOut();
+      navigate('/login'); // Redirect to login page after logout
+    } catch (error) {
+      console.error('Failed to log out:', error);
+    }
+  };
+
+  return (
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+      <div className="container-fluid">
+        <NavLink className="navbar-brand" to="/">
+          HorizonNexus
+        </NavLink>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/">
+                Dashboard
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/announcements">
+                Announcements
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/assignments">
+                Assignments
+              </NavLink>
+            </li>
+            {/* Conditionally render Admin link */}
+            {userProfile?.role === 'admin' && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/admin">
+                  Admin
+                </NavLink>
+              </li>
+            )}
+          </ul>
+          <div className="d-flex align-items-center">
+            {userProfile && (
+              <>
+                <span className="navbar-text me-3">
+                  Welcome, {userProfile.displayName || userProfile.email}
+                </span>
+                <button className="btn btn-outline-danger" onClick={handleLogout}>
+                  Sign Out
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+--- FILE: components/layout/Navbar/index.ts ---
+
+
+
+--- FILE: components/layout/Notifications/Notifications.tsx ---
+
+
+
+--- FILE: components/layout/Notifications/index.ts ---
+
+
+
+--- FILE: components/layout/Search/SearchBar.tsx ---
+
+
+
+--- FILE: components/layout/Search/index.ts ---
+
+
+
+--- FILE: config/firebase.ts ---
+
+// src/config/firebase.ts
+
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBA9XJVOKDq_ow93m3jIsA39FEWg28NvuE", // Paste your keys here
+  authDomain: "horizon-nexus.firebaseapp.com",
+  projectId: "horizon-nexus",
+  storageBucket: "horizon-nexus.firebasestorage.app",
+  messagingSenderId: "275845224257",
+  appId: "1:275845224257:web:88c6ff7c26d391a46533c0",
+  measurementId: "G-WJXJQ000JC"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize and export Firebase services
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
+export default app;
+
+// in config/firebase.ts
+import { getFunctions } from "firebase/functions";
+// ... other imports
+
+// ... after initializing app
+export const functions = getFunctions(app);
+
+--- FILE: features/admin/components/CreateUserForm.tsx ---
+
+import { useState, type FormEvent } from 'react';
+import { createNewUser } from '../services/adminService'; // We will create this function next
+import type { UserRole } from '../../../types';
+
+export default function CreateUserForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [role, setRole] = useState<UserRole>('student');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsSubmitting(true);
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const result = await createNewUser({ email, password, displayName, role });
+      setSuccess(result.message);
+      // Clear the form
+      setEmail('');
+      setPassword('');
+      setDisplayName('');
+      setRole('student');
+    } catch (err: any) {
+      setError(err.message || 'An unknown error occurred.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h5 className="card-header">Create New User</h5>
+      <div className="card-body">
+        <form onSubmit={handleSubmit}>
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+
+          <div className="mb-3">
+            <label htmlFor="displayName" className="form-label">Full Name</label>
+            <input
+              type="text"
+              className="form-control"
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Email Address</label>
+            <input
+              type="email"
+              className="form-control"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="role" className="form-label">Role</label>
+            <select
+              id="role"
+              className="form-select"
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserRole)}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Create User'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+--- FILE: features/admin/components/UserManagement.tsx ---
+
+import { useState, useEffect } from 'react';
+// We will create the adminService functions shortly.
+import { getAllUsers, updateUserRole } from '../services/adminService';
+import type { UserProfile, UserRole } from '../../../types';
+
+export default function UserManagement() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const userList = await getAllUsers();
+        setUsers(userList);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch users.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleRoleChange = async (uid: string, newRole: UserRole) => {
+    // Optimistically update the UI
+    setUsers(users.map(u => u.uid === uid ? { ...u, role: newRole } : u));
+
+    try {
+      await updateUserRole(uid, newRole);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update role.');
+      // Revert UI on failure
+      // (For a production app, you'd fetch the original state again)
+      console.error(err);
+    }
+  };
+
+  if (isLoading) return <div className="text-center">Loading users...</div>;
+  if (error) return <div className="alert alert-danger">{error}</div>;
+
+  return (
+    <div className="card">
+      <h5 className="card-header">User Role Management</h5>
+      <div className="card-body">
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>Name / Email</th>
+                <th>Current Role</th>
+                <th>Change Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(user => (
+                <tr key={user.uid}>
+                  <td>{user.displayName || user.email}</td>
+                  <td>
+                    <span className="badge bg-secondary">{user.role}</span>
+                  </td>
+                  <td>
+                    <select
+                      className="form-select form-select-sm"
+                      value={user.role}
+                      onChange={(e) => handleRoleChange(user.uid, e.target.value as UserRole)}
+                    >
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+--- FILE: features/admin/hooks/useAdminData.ts ---
+
+
+
+--- FILE: features/admin/services/adminService.ts ---
+
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../../../config/firebase'; 
+import type { UserProfile, UserRole } from '../../../types';
+
+// Define the shape of the data sent to the new function
+interface CreateUserRequest {
+  email: string;
+  password: string;
+  displayName: string;
+  role: UserRole;
+}
+
+interface CreateUserResponse {
+    message: string;
+}
+
+// Get references to the Cloud Functions
+const getAllUsersFunction = httpsCallable(functions, 'getAllUsers');
+const updateUserRoleFunction = httpsCallable(functions, 'updateUserRole');
+// Add a reference to our new function
+const createNewUserFunction = httpsCallable<CreateUserRequest, CreateUserResponse>(functions, 'createNewUser');
+
+export const getAllUsers = async (): Promise<UserProfile[]> => {
+  try {
+    const result = await getAllUsersFunction();
+    return result.data as UserProfile[];
+  } catch (error) {
+    console.error('Error calling getAllUsers function:', error);
+    throw error;
+  }
+};
+
+export const updateUserRole = async (uid: string, newRole: UserRole): Promise<void> => {
+    try {
+        await updateUserRoleFunction({ uid, newRole });
+    } catch (error) {
+        console.error('Error calling updateUserRole function:', error);
+        throw error;
+    }
+};
+
+// This is the new function
+export const createNewUser = async (data: CreateUserRequest): Promise<CreateUserResponse> => {
+    try {
+        const result = await createNewUserFunction(data);
+        return result.data;
+    } catch (error) {
+        console.error('Error calling createNewUser function:', error);
+        throw error;
+    }
+};
+
+--- FILE: features/announcements/services/announcementService.ts ---
+
+import type { Announcement } from '../../../types';
+
+// This is a mock function. Replace this with your actual Firestore query.
+// Example Firestore query would look something like:
+//
+// import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+// import { db } from '../../../config/firebase';
+//
+// export const getAnnouncements = async (): Promise<Announcement[]> => {
+//   const announcementsCol = collection(db, 'announcements');
+//   const q = query(announcementsCol, orderBy('createdAt', 'desc'));
+//   const snapshot = await getDocs(q);
+//   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Announcement));
+// };
+
+export const getAnnouncements = async (): Promise<Announcement[]> => {
+  console.log("Fetching announcements...");
+  // Returning mock data for demonstration purposes
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: '1',
+          title: 'Welcome to HorizonNexus!',
+          content: 'This is the first announcement. The platform is now live.',
+          author: 'Admin',
+          createdAt: new Date('2025-10-21T09:00:00Z'),
+        },
+        {
+          id: '2',
+          title: 'Mid-Term Exam Schedule',
+          content: 'The mid-term exam schedule has been posted in the resources section.',
+          author: 'Admin',
+          createdAt: new Date('2025-10-22T11:30:00Z'),
+        },
+      ]);
+    }, 500); // Simulate network delay
+  });
+};
+
+--- FILE: features/assignments/services/assignmentService.ts ---
+
+import type { Assignment } from '../../../types';
+
+// This is a mock function. Replace with your actual Firestore query.
+// The logic will be very similar to the getAnnouncements function.
+
+export const getAssignments = async (): Promise<Assignment[]> => {
+    console.log("Fetching assignments...");
+    // Returning mock data for demonstration purposes
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve([
+                {
+                    id: 'asg1',
+                    title: 'History Chapter 4 Essay',
+                    description: 'Write a 500-word essay on the causes of World War I.',
+                    dueDate: new Date('2025-11-05T23:59:00Z'),
+                },
+                {
+                    id: 'asg2',
+                    title: 'Calculus Problem Set 3',
+                    description: 'Complete all problems on page 52 of the textbook.',
+                    dueDate: new Date('2025-11-08T23:59:00Z'),
+                },
+                {
+                    id: 'asg3',
+                    title: 'Physics Lab Report',
+                    description: 'Submit the lab report for the "Gravity and Motion" experiment.',
+                    dueDate: new Date('2025-11-10T23:59:00Z'),
+                }
+            ]);
+        }, 500); // Simulate network delay
+    });
+};
+
+--- FILE: features/authentication/services/authService.ts ---
+
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  type UserCredential,
+} from 'firebase/auth';
+import { auth } from '../../../config/firebase';
+
+export const signIn = (email: string, password: string): Promise<UserCredential> => {
+  return signInWithEmailAndPassword(auth, email, password);
+};
+
+export const logOut = (): Promise<void> => {
+  return signOut(auth);
+};
+
+--- FILE: features/grades/components/GradebookView.tsx ---
+
+
+
+--- FILE: features/grades/hooks/useGrades.ts ---
+
+
+
+--- FILE: features/grades/services/gradeService.ts ---
+
+
+
+--- FILE: features/profiles/components/ProfileCard.tsx ---
+
+
+
+--- FILE: features/profiles/hooks/useUserProfile.ts ---
+
+
+
+--- FILE: features/profiles/services/profileService.ts ---
+
+
+
+--- FILE: hooks/useAuth.ts ---
+
+import { useState, useEffect } from 'react';
+import { onAuthStateChanged, type User as FirebaseAuthUser } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { getUserProfile } from '../services/firestoreService';
+import type { UserProfile } from '../types';
+
+// The hook will now return a UserProfile object, which includes the role.
+// We also keep the original FirebaseAuthUser for any direct needs.
+interface AuthState {
+  firebaseUser: FirebaseAuthUser | null;
+  userProfile: UserProfile | null;
+  isLoading: boolean;
+}
+
+export function useAuth(): AuthState {
+  const [authState, setAuthState] = useState<AuthState>({
+    firebaseUser: null,
+    userProfile: null,
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // User is signed in, now fetch their profile from Firestore.
+        const profile = await getUserProfile(currentUser.uid);
+        setAuthState({
+          firebaseUser: currentUser,
+          userProfile: profile,
+          isLoading: false,
+        });
+      } else {
+        // User is signed out.
+        setAuthState({
+          firebaseUser: null,
+          userProfile: null,
+          isLoading: false,
+        });
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  return authState;
+}
+
+--- FILE: pages/AdminDashboard.tsx ---
+
+import UserManagement from '../features/admin/components/UserManagement';
+import CreateUserForm from '../features/admin/components/CreateUserForm';
+
+export default function AdminDashboard() {
+  return (
+    <div>
+      <h1 className="mb-4">Admin Dashboard</h1>
+      <p>
+        Use the forms below to manage the application. You can create new user accounts or change the roles of existing users.
+      </p>
+      
+      <div className="row g-4">
+        <div className="col-12 col-lg-6">
+          <CreateUserForm />
+        </div>
+        <div className="col-12 col-lg-6">
+           <UserManagement />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+--- FILE: pages/AnnouncementsPage.tsx ---
+
+import { useState, useEffect } from 'react';
+import type { Announcement } from '../types';
+import { getAnnouncements } from '../features/announcements/services/announcementService';
+import { useAuth } from '../hooks/useAuth'; // Import useAuth
+
+export default function AnnouncementsPage() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userProfile } = useAuth(); // Get user profile to check role
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAnnouncements();
+        setAnnouncements(data);
+      } catch (err) {
+        setError('Failed to fetch announcements.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  const canCreate = userProfile?.role === 'admin' || userProfile?.role === 'teacher';
+
+  if (isLoading) {
+    return <div className="text-center">Loading announcements...</div>;
+  }
+
+  if (error) {
+    return <div className="alert alert-danger">{error}</div>;
+  }
+
+  return (
+    <div>
+      <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4">
+        <h1 className="mb-3 mb-md-0">Announcements</h1>
+        {/* Conditionally render the button */}
+        {canCreate && (
+          <button className="btn btn-primary align-self-start align-self-md-auto">
+            New Announcement
+          </button>
+        )}
+      </div>
+
+      {announcements.length === 0 ? (
+        <p>No announcements to display.</p>
+      ) : (
+        <div className="list-group">
+          {announcements.map((ann) => (
+            <div key={ann.id} className="list-group-item list-group-item-action flex-column align-items-start">
+              <div className="d-flex w-100 justify-content-between">
+                <h5 className="mb-1">{ann.title}</h5>
+                <small className="text-nowrap">{ann.createdAt.toLocaleDateString()}</small>
+              </div>
+              <p className="mb-1">{ann.content}</p>
+              <small>By: {ann.author}</small>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+--- FILE: pages/AssignmentDetailPage.tsx ---
+
+
+
+--- FILE: pages/AssignmentsPage.tsx ---
+
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import type { Assignment } from '../types';
+import { getAssignments } from '../features/assignments/services/assignmentService';
+import { useAuth } from '../hooks/useAuth'; // Import useAuth
+
+export default function AssignmentsPage() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userProfile } = useAuth(); // Get user profile to check role
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAssignments();
+        setAssignments(data);
+      } catch (err) {
+        setError('Failed to fetch assignments.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAssignments();
+  }, []);
+  
+  // Only admins and teachers can create new assignments
+  const canCreate = userProfile?.role === 'admin' || userProfile?.role === 'teacher';
+
+  if (isLoading) {
+    return <div className="text-center">Loading assignments...</div>;
+  }
+
+  if (error) {
+    return <div className="alert alert-danger">{error}</div>;
+  }
+
+  return (
+    <div>
+      <div className="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4">
+        <h1 className="mb-3 mb-md-0">Assignments</h1>
+        {/* Conditionally render the button based on user role */}
+        {canCreate && (
+            <button className="btn btn-primary align-self-start align-self-md-auto">
+                New Assignment
+            </button>
+        )}
+      </div>
+
+      {assignments.length === 0 ? (
+        <p>No assignments to display.</p>
+      ) : (
+        <div className="card">
+          <ul className="list-group list-group-flush">
+            {assignments.map((asg) => (
+              <li key={asg.id} className="list-group-item d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center">
+                <div className="mb-2 mb-sm-0">
+                  <h5>{asg.title}</h5>
+                  <p className="mb-1 text-muted">Due: {asg.dueDate.toLocaleDateString()}</p>
+                </div>
+                {/* All roles should be able to view details */}
+                <Link to={`/assignments/${asg.id}`} className="btn btn-outline-secondary btn-sm align-self-start">
+                  View Details
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+--- FILE: pages/ChatPage.tsx ---
+
+
+
+--- FILE: pages/Dashboard.tsx ---
+
+import { useAuth } from '../hooks/useAuth';
+
+export default function Dashboard() {
+  const { userProfile } = useAuth(); // Updated to use userProfile
+
+  return (
+    <div>
+      <div className="p-5 mb-4 bg-light rounded-3">
+        <div className="container-fluid py-5">
+          <h1 className="display-5 fw-bold">Welcome, {userProfile?.displayName || userProfile?.email}!</h1>
+          <p className="col-md-8 fs-4">
+            This is your main dashboard. From here you can access all the features of the application.
+            Use the navigation bar above to get started.
+          </p>
+          {/* Display user's role for clarity */}
+          {userProfile?.role && (
+            <p className="lead">
+              Your role is: <span className="badge bg-secondary">{userProfile.role}</span>
+            </p>
+          )}
+        </div>
+      </div>
+      {/* You can add dashboard widgets or summaries here */}
+    </div>
+  );
+}
+
+--- FILE: pages/GradesPage.tsx ---
+
+
+
+--- FILE: pages/LoginPage.tsx ---
+
+import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signIn } from '../features/authentication/services/authService';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    try {
+      await signIn(email, password);
+      navigate('/');
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      setError('Failed to log in. Please check your email and password.');
+    }
+  };
+
+  return (
+    <div className="container min-vh-100 d-flex align-items-center justify-content-center">
+      <div className="row w-100 justify-content-center">
+        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+          <div className="card shadow-sm">
+            <div className="card-body p-4 p-md-5">
+              <h3 className="card-title text-center mb-4">HorizonNexus Login</h3>
+              <form onSubmit={handleLogin}>
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">Email address</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                {error && <div className="alert alert-danger mt-3">{error}</div>}
+                <div className="d-grid mt-4">
+                  <button type="submit" className="btn btn-primary">
+                    Login
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+--- FILE: pages/ProfilePage.tsx ---
+
+
+
+--- FILE: pages/SearchResultsPage.tsx ---
+
+
+
+--- FILE: services/firestoreService.ts ---
+
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import type { UserProfile } from '../types';
+
+/**
+ * Fetches a user's profile from the 'users' collection in Firestore.
+ * @param uid The user's unique ID from Firebase Auth.
+ * @returns The user's profile data or null if not found.
+ */
+export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+  const userDocRef = doc(db, 'users', uid);
+  const userDocSnap = await getDoc(userDocRef);
+
+  if (userDocSnap.exists()) {
+    // Assuming the document data matches the UserProfile structure
+    // and adds the uid to the returned object.
+    return { uid, ...userDocSnap.data() } as UserProfile;
+  } else {
+    // Handle the case where the user profile doesn't exist.
+    console.warn(`No user profile found for UID: ${uid}`);
+    return null;
+  }
+};
+
+--- FILE: services/searchService.ts ---
+
+
+
+--- FILE: types/index.ts ---
+
+// Define user roles
+export type UserRole = 'admin' | 'teacher' | 'student';
+
+// Define the structure of a user profile stored in Firestore
+export interface UserProfile {
+  uid: string;
+  email: string;
+  role: UserRole;
+  displayName?: string;
+}
+
+// Define the structure of an Announcement object
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  createdAt: Date;
+}
+
+// Define the structure of an Assignment object
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: Date;
+}
+
+--- FILE: utils/dateUtils.ts ---
+
